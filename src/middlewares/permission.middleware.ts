@@ -1,6 +1,6 @@
-import PermissionClaimBuilder from "../permissions/permissions.builder"
-import { createError } from "../utils/error"
-import { Request, Response, NextFunction } from "express"
+import PermissionClaimBuilder from '../permissions/permissions.builder'
+import { createError } from '../utils/error'
+import { Request, Response, NextFunction } from 'express'
 
 declare module 'express' {
   interface Request {
@@ -18,7 +18,7 @@ export function validateRoleMiddleware(roles: string[]) {
   }
 }
 
-export function permissionClaimBuilderMiddleware (request: Request, _response: Response, next: NextFunction) {
+export function permissionClaimBuilderMiddleware(request: Request, _response: Response, next: NextFunction) {
   const builder = new PermissionClaimBuilder()
   request.permissionClaimBuilder = builder
   // TODO: set collection for claim builder

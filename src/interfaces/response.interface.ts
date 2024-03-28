@@ -1,9 +1,9 @@
-export interface SingleResponseBody<T> {
+export interface SingleItemResponse<T> {
   success: boolean
   item: T
 }
 
-export interface MultipleResponseBody<T> {
+export interface MultipleItemResponse<T> {
   success: boolean
   items: T[]
   counts: number

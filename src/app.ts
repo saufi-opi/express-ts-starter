@@ -1,10 +1,12 @@
-import express from "express"
-import { permissionClaimBuilderMiddleware } from "./middlewares/permission.middleware"
-import { authMiddleware } from "./middlewares/auth.middleware"
-import mongoose from "mongoose"
-import { MONGODB_DB_NAME, MONGODB_URL, PORT } from "./config"
-import { errorMiddleware } from "./middlewares/error.middleware"
-import { notFoundHandlerMiddleware } from "./middlewares/404.middleware"
+import express from 'express'
+import { permissionClaimBuilderMiddleware } from './middlewares/permission.middleware'
+import { authMiddleware } from './middlewares/auth.middleware'
+import mongoose from 'mongoose'
+import { MONGODB_DB_NAME, MONGODB_URL, PORT } from './config'
+import { errorMiddleware } from './middlewares/error.middleware'
+import { notFoundHandlerMiddleware } from './middlewares/404.middleware'
+import logger from './utils/logger'
+import { loggerMiddleware } from './middlewares/logger.middleware'
 
 class App {
   private app: express.Application
@@ -14,7 +16,7 @@ class App {
   constructor(routes: any[]) {
     this.app = express()
     this.port = PORT
-    this.prefix = "/api/v1"
+    this.prefix = '/api/v1'
 
     this.initializedMiddlewares()
     this.connectDatabase()
@@ -27,16 +29,16 @@ class App {
 
   public listen() {
     this.app.listen(this.port, () => {
-      console.log(`🚀 Server listening at http://localhost:${this.port}`)
+      logger.info(`Server listening at http://localhost:${this.port}`)
     })
   }
 
   private async connectDatabase() {
     try {
       await mongoose.connect(MONGODB_URL, { dbName: MONGODB_DB_NAME })
-      console.log("✅ Database connected")
+      logger.info('Database connected')
     } catch (error) {
-      console.log("❌ Database connection failed")
+      logger.info('Database connection failed')
     }
   }
 
@@ -47,7 +49,8 @@ class App {
   }
 
   private initializedMiddlewares() {
-    this.app.post("*", permissionClaimBuilderMiddleware)
+    this.app.use(loggerMiddleware)
+    this.app.post('*', permissionClaimBuilderMiddleware)
     this.app.use(authMiddleware)
   }
 

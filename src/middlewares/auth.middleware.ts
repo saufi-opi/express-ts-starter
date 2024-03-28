@@ -1,7 +1,7 @@
-import { Request, Response, NextFunction } from "express";
-import { Account } from "../interfaces/user.interface";
+import { Request, Response, NextFunction } from 'express'
+import { Account } from '../interfaces/account.interface'
 
-declare module "express" {
+declare module 'express' {
   interface Request {
     user: Account
     role: string
@@ -10,6 +10,5 @@ declare module "express" {
 
 // TODO: auth middleware
 export function authMiddleware(request: Request, response: Response, next: NextFunction) {
-  
   next()
 }
