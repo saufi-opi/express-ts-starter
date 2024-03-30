@@ -14,7 +14,8 @@ class AccountRoute implements Routes {
   private initializeRoutes() {
     this.router.get(this.path, this.ctr.getAccounts)
     this.router.post(this.path, this.ctr.createAccount)
-    this.router.put(this.path, this.ctr.updateAccount)
+    this.router.put(`${this.path}/:id`, this.ctr.updateAccount)
+    this.router.delete(`${this.path}/:id`, this.ctr.deleteAccount)
   }
 }
 
