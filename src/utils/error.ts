@@ -2,7 +2,7 @@ import { ApiError } from "../interfaces/api-error.interface"
 
 export function createError (code: number, message: string): ApiError {
   const err: ApiError = new Error(message)
-  err.statusCode = code ?? 400
+  err.statusCode = code ?? 500
   return err
 }
 
