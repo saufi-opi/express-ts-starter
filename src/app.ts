@@ -49,8 +49,8 @@ class App {
   }
 
   private initializedMiddlewares() {
-    this.app.use(express.json())
     this.app.use(loggerMiddleware)
+    this.app.use(express.json())
     this.app.post('*', permissionClaimBuilderMiddleware)
     this.app.use(authMiddleware)
   }

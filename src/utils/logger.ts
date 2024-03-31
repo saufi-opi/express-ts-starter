@@ -1,14 +1,13 @@
-import winston from "winston"
+import pino from 'pino'
 
-const logger = winston.createLogger({
-  level: "info",
-  format: winston.format.combine(
-    winston.format.timestamp({
-      format: "YYYY-MM-DD HH:mm:ss",
-    }),
-    winston.format.json()
-  ),
-  transports: [new winston.transports.Console()],
+const logger = pino({
+  level: 'info',
+  formatters: {
+    // we do not want to expose pid and host
+    bindings() {
+      return {}
+    }
+  }
 })
 
 export default logger
