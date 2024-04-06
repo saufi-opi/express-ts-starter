@@ -1,23 +1,23 @@
+import { Request, Response } from 'express'
 import logger from '../utils/logger'
 import { pinoHttp } from 'pino-http'
-import pino from 'pino'
 
 export const loggerMiddleware = pinoHttp({
   logger,
   serializers: {
-    req: (req) => ({
-      id: req.id,
-      method: req.method,
-      url: req.url
+    req: (request: Request) => ({
+      id: request.id,
+      method: request.method,
+      url: request.url
     }),
-    res: (res) => ({
-      statusCode: res.statusCode
+    res: (response: Response) => ({
+      statusCode: response.statusCode
     })
   },
-  customLogLevel: function (_req, res, err) {
-    if (res.statusCode >= 300 && res.statusCode < 500) {
+  customLogLevel: function (_, response, err) {
+    if (response.statusCode >= 300 && response.statusCode < 500) {
       return 'silent'
-    } else if (res.statusCode >= 500 || err) {
+    } else if (response.statusCode >= 500 || err) {
       return 'error'
     }
     return 'info'
