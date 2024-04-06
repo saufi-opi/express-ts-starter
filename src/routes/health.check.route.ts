@@ -9,7 +9,7 @@ class HealthCheckRoute implements Routes {
     this.initializeRoutes()
   }
 
-  private initializeRoutes() {
+  public initializeRoutes() {
     this.router.get(`${this.path}`, (_request: Request, response: Response<{ success: boolean; message: string }>) => {
       response.status(201).json({ success: true, message: 'OK' })
     })
