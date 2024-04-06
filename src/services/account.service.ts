@@ -1,54 +1,66 @@
-import { FilterQuery } from 'mongoose'
-import { Account } from '../interfaces/account.interface'
+import { FilterQuery, PipelineStage, QueryOptions } from 'mongoose'
+import { Account } from '../models/account.model'
 import { createHash } from 'crypto'
-import BaseService, { ServiceOptions } from '../base/service.base'
+import BaseService, { ExtendedSearchQueryOptions } from '../base/service.base'
 
 export class AccountService extends BaseService<Account> {
-  // TODO: use aggregate for find the docs using query passed
-  public async search(): Promise<Account[]> {
-    const items = await this.model.find({}, { password: false })
-    return items
+  public aggregationPipeline(options: ExtendedSearchQueryOptions): PipelineStage[] {
+    const pipeline = super.aggregationPipeline(options)
+    pipeline.push({
+      $project: {
+        password: false
+      }
+    })
+    return pipeline
   }
 
-  public async insertOne(docs: Partial<Account>, options?: ServiceOptions): Promise<Account | null> {
+  public async insertOne(docs: Partial<Account>, options?: QueryOptions<Account>): Promise<Account | null> {
     docs.password = this.hashedPassword(docs.password)
     const exist = await this.findOne({ email: docs.email }, options)
     if (exist) throw this.error(400, 'duplicate-email')
 
-    const item = await super.insertOne(docs, this.appendOptions(options))
+    const item = await super.insertOne(docs, options)
     return item
   }
 
-  public async findOne(filter: FilterQuery<Account>, options?: ServiceOptions): Promise<Account | null> {
-    const item = await super.findOne(filter, this.appendOptions(options))
+  public async findOne(filter: FilterQuery<Account>, options?: QueryOptions<Account>): Promise<Account | null> {
+    const item = await super.findOne(filter, options)
     return item
   }
 
-  public async updateOne(filter: FilterQuery<Account>, docs: Partial<Account>, options?: ServiceOptions): Promise<Account | null> {
+  public async updateOne(filter: FilterQuery<Account>, docs: Partial<Account>, options?: QueryOptions<Account>): Promise<Account | null> {
     if (docs.password) {
       docs.password = this.hashedPassword(docs.password)
     }
+    if (docs.email) {
+      const exist = await this.findOne({ email: docs.email, id: { $ne: docs.id } }, options)
+      if (exist) throw this.error(400, 'duplicate-email')
+    }
 
-    const item = await super.updateOne(filter, docs, this.appendOptions(options))
+    const item = await super.updateOne(filter, docs, options)
     return item
   }
 
-  public async updateMany(filter: FilterQuery<Account>, docs: Partial<Account>, options?: ServiceOptions): Promise<Account[]> {
+  public async updateMany(filter: FilterQuery<Account>, docs: Partial<Account>, options?: QueryOptions<Account>): Promise<Account[]> {
     if (docs.password) {
       docs.password = this.hashedPassword(docs.password)
     }
+    if (docs.email) {
+      const exist = await this.findOne({ email: docs.email, id: { $ne: docs.id } }, options)
+      if (exist) throw this.error(400, 'duplicate-email')
+    }
 
-    const items = await super.deleteMany(filter, this.appendOptions(options))
+    const items = await super.deleteMany(filter, options)
     return items
   }
 
-  public async deleteOne(filter: FilterQuery<Account>, options?: ServiceOptions): Promise<Account | null> {
-    const item = await super.deleteOne(filter, this.appendOptions(options))
+  public async deleteOne(filter: FilterQuery<Account>, options?: QueryOptions<Account>): Promise<Account | null> {
+    const item = await super.deleteOne(filter, options)
     return item
   }
 
-  public async deleteMany(filter: FilterQuery<Account>, options?: ServiceOptions): Promise<Account[]> {
-    const items = await super.deleteMany(filter, this.appendOptions(options))
+  public async deleteMany(filter: FilterQuery<Account>, options?: QueryOptions<Account>): Promise<Account[]> {
+    const items = await super.deleteMany(filter, options)
     return items
   }
 
@@ -56,11 +68,6 @@ export class AccountService extends BaseService<Account> {
     const hash = createHash('sha256')
     hash.update(password + salt)
     return hash.digest('hex')
-  }
-
-  appendOptions(options: ServiceOptions) {
-    options.projection = { password: false }
-    return options
   }
 }
 
