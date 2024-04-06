@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { Routes } from '../interfaces/route.interface'
-import { AccountController } from '../controllers/account.controller'
+import { Routes } from '../../interfaces/route.interface'
+import { AccountController } from './account.controller'
 
 class AccountRoute implements Routes {
   public path = '/accounts'

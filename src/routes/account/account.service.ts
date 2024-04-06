@@ -1,7 +1,7 @@
 import { FilterQuery, PipelineStage, QueryOptions } from 'mongoose'
-import { Account } from '../models/account.model'
+import { Account } from './account.model'
 import { createHash } from 'crypto'
-import BaseService, { ExtendedSearchQueryOptions } from '../base/service.base'
+import BaseService, { ExtendedSearchQueryOptions } from '../../base/service.base'
 
 export class AccountService extends BaseService<Account> {
   public aggregationPipeline(options: ExtendedSearchQueryOptions): PipelineStage[] {

@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose'
-import databaseNames from '../databases/database.names'
+import databaseNames from '../../databases/database.names'
 
 export interface Account {
   id: string

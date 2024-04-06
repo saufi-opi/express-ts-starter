@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express'
-import { MultipleItemResponse, SingleItemResponse } from '../interfaces/response.interface'
-import { Account } from '../models/account.model'
-import AccountService from '../services/account.service'
-import { withTransaction } from '../utils/database'
-import databaseNames from '../databases/database.names'
-import { AccountModel } from '../models/account.model'
+import { MultipleItemResponse, SingleItemResponse } from '../../interfaces/response.interface'
+import { Account } from './account.model'
+import AccountService from './account.service'
+import { withTransaction } from '../../utils/database'
+import databaseNames from '../../databases/database.names'
+import { AccountModel } from './account.model'
 
 export class AccountController {
   private accountService = new AccountService(AccountModel, { dbName: databaseNames.account })
