@@ -1,13 +1,20 @@
 import { Schema, model } from 'mongoose'
-import { Account } from '../interfaces/account.interface'
 import databaseNames from '../databases/database.names'
+
+export interface Account {
+  id: string
+  email: string
+  password: string
+}
 
 const AccountSchema = new Schema<Account>(
   {
     id: {
       _id: true,
       type: String,
-      required: true
+      required: true,
+      unique: true,
+      index: true
     },
     email: {
       type: String,
