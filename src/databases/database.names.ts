@@ -1,4 +1,4 @@
 export default {
   account: 'account',
-  auth: 'authenticate'
+  authenticate: 'authenticate'
 }
