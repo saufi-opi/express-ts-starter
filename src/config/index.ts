@@ -8,8 +8,7 @@ const defaults = {
   SMTP_CONNECTION_STRING: 'smtp://127.0.0.1:25',
   SMTP_SENDER: 'NoReply <noreply@localhost>',
   JWT_SECRET: 'jwt-secret',
-  REFRESH_TOKEN_EXP: '3d',
-  ACCESS_TOKEN_EXP: '5m'
+  TOKEN_EXP: '3d'
 }
 let config: typeof defaults = {
   PORT: +process.env.PORT ?? defaults.PORT,
@@ -18,8 +17,7 @@ let config: typeof defaults = {
   SMTP_CONNECTION_STRING: process.env.SMTP_CONNECTION_STRING ?? defaults.SMTP_CONNECTION_STRING,
   SMTP_SENDER: process.env.SMTP_SENDER ?? defaults.SMTP_SENDER,
   JWT_SECRET: process.env.JWT_SECRET ?? defaults.JWT_SECRET,
-  REFRESH_TOKEN_EXP: process.env.JWT_SECRET ?? defaults.REFRESH_TOKEN_EXP,
-  ACCESS_TOKEN_EXP: process.env.JWT_SECRET ?? defaults.ACCESS_TOKEN_EXP
+  TOKEN_EXP: process.env.JWT_SECRET ?? defaults.TOKEN_EXP
 }
 
-export const { PORT, MONGODB_URL, MONGODB_DB_NAME, JWT_SECRET, SMTP_CONNECTION_STRING, SMTP_SENDER, REFRESH_TOKEN_EXP, ACCESS_TOKEN_EXP } = config
+export const { PORT, MONGODB_URL, MONGODB_DB_NAME, JWT_SECRET, SMTP_CONNECTION_STRING, SMTP_SENDER, TOKEN_EXP } = config
