@@ -2,6 +2,9 @@ import { AggregateOptions, ClientSession, FilterQuery, Model, PipelineStage, Que
 import { createError, createErrorFactory } from '../utils/error'
 import { appendDoc } from '../utils/database'
 import { Resources } from '../interfaces/response.interface'
+import { FLAGS } from '../permissions/permissions.flags'
+import { PermissionClaimnOwnerType } from '../permissions/permission.model'
+import databaseNames from '../databases/database.names'
 
 export interface ServiceOptions {
   dbName: string
@@ -18,11 +21,13 @@ export interface SearchQueryOptions {
 
 export interface ExtendedSearchQueryOptions extends SearchQueryOptions {
   account?: string
+  role?: string
 }
 
 export class BaseService<T extends { id: string }> {
   protected model: Model<T>
   public error: typeof createError
+  public dbName: string
   public primaryKey: string
 
   constructor(model: Model<T>, options: ServiceOptions) {
@@ -30,13 +35,76 @@ export class BaseService<T extends { id: string }> {
 
     this.model = model
     this.error = createErrorFactory(options.dbName)
+    this.dbName = options.dbName
     this.primaryKey = options.primaryKey
   }
 
   public aggregationPipeline(options: ExtendedSearchQueryOptions): PipelineStage[] {
-    // TODO: make filtering, pagination, sort
-    // TODO: make a pipeline to lookup from permission collection and if doesnt have permission with read FLAG, remove from returning to user
     const pipeline: PipelineStage[] = []
+    // TODO: make filtering, pagination, sort
+
+    // generate permission claim pipeline
+    const $or = []
+    if (options.account) {
+      $or.push({
+        $and: [
+          { 'items.flag': { $bitsAllSet: FLAGS.READ } },
+          { $expr: { $eq: ['$items.ownerType', PermissionClaimnOwnerType.ACCOUNT] } },
+          { $expr: { $eq: ['$items.ownerRef', options.account] } }
+        ]
+      })
+    }
+    if (options.role) {
+      $or.push({
+        $and: [
+          { 'items.flag': { $bitsAllSet: FLAGS.READ } },
+          { $expr: { $eq: ['$items.ownerType', PermissionClaimnOwnerType.ROLE] } },
+          { $expr: { $eq: ['$items.ownerRef', options.role] } }
+        ]
+      })
+    }
+    if ($or.length > 0) {
+      pipeline.push({
+        $lookup: {
+          from: databaseNames.system.claim,
+          let: { [this.primaryKey]: `$${this.primaryKey}` },
+          pipeline: [
+            {
+              $match: {
+                $and: [{ $expr: { $eq: ['$resourceRef', `$$${this.primaryKey}`] } }, { $expr: { $eq: ['$resource', this.dbName] } }]
+              }
+            },
+            {
+              $unwind: {
+                path: '$items'
+              }
+            },
+            {
+              $match: {
+                $or
+              }
+            }
+          ],
+          as: 'resources.claim'
+        }
+      })
+      pipeline.push({
+        $addFields: {
+          'resources.claimNum': {
+            $size: '$resources.claim'
+          }
+        }
+      })
+      pipeline.push({
+        $match: {
+          'resources.claimNum': { $gt: 0 }
+        }
+      })
+      pipeline.push({
+        $unset: ['resources.claim', 'resources.claimNum']
+      })
+    }
+
     return pipeline
   }
 
