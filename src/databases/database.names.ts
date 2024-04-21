@@ -1,4 +1,7 @@
 export default {
   account: 'account',
-  authenticate: 'authenticate'
+  authenticate: 'authenticate',
+  system: {
+    claim: 'sys.claim'
+  }
 }

@@ -18,15 +18,8 @@ export function validateRoleMiddleware(roles: string[]) {
   }
 }
 
-export function validateActionMiddleware(resourceRef: string, FLAGS: number) {
-  return (request: Request, _response: Response, next: NextFunction) => {
-    // TODO
-  }
-}
-
 export function permissionClaimBuilderMiddleware(request: Request, _response: Response, next: NextFunction) {
   const builder = new PermissionClaimBuilder()
   request.permissionClaimBuilder = builder
-  // TODO: set collection for claim builder
   next()
 }
