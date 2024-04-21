@@ -5,14 +5,17 @@ import AccountService from './account.service'
 import { withTransaction } from '../../utils/database'
 import databaseNames from '../../databases/database.names'
 import { AccountModel } from './account.model'
+import { FLAGS } from '../../permissions/permissions.flags'
+import { retrieveQuery } from '../../utils/query'
+import { validateAction } from '../../permissions/permission.helper'
 
 export class AccountController {
   private accountService = new AccountService(AccountModel, { dbName: databaseNames.account })
 
   public getAccounts = async (request: Request, response: Response<MultipleItemResponse<Account>>, next: NextFunction) => {
-    // TODO: retrieve query options from request url
+    const options = retrieveQuery(request)
     try {
-      const items = await this.accountService.search({})
+      const items = await this.accountService.search(options)
       response.status(200).json({ success: true, counts: items.length, items })
     } catch (error) {
       next(error)
@@ -26,7 +29,14 @@ export class AccountController {
         return item
       })
 
-      // TODO: insert claim (request.permissionClaimBuilder)
+      await request.permissionClaimBuilder
+        .setResource(databaseNames.account)
+        .setResourceRef(item.id)
+        .grantAccount(item.id, FLAGS.READ | FLAGS.UPDATE | FLAGS.DELETE)
+        .grantRole('admin', FLAGS.READ | FLAGS.UPDATE | FLAGS.DELETE)
+        .grantRole('user', FLAGS.READ)
+        .execute()
+
       response.status(201).json({ success: true, item })
     } catch (error) {
       next(error)
@@ -34,8 +44,8 @@ export class AccountController {
   }
 
   public updateAccount = async (request: Request, response: Response<SingleItemResponse<Account>>, next: NextFunction) => {
-    // TODO: check permission for update this account id
     try {
+      await validateAction({ request, resource: this.accountService.dbName, resourceRef: request.params.id, flag: FLAGS.UPDATE })
       const item = await withTransaction(async (session) => {
         const item = await this.accountService.updateOne({ id: request.params.id }, request.body, { session, projection: '-password' })
         if (!item) throw this.accountService.error(404, 'id-not-exist')
@@ -49,8 +59,8 @@ export class AccountController {
   }
 
   public deleteAccount = async (request: Request, response: Response<SingleItemResponse<Account>>, next: NextFunction) => {
-    // TODO: check permission for delete this account id // or use middleware
     try {
+      await validateAction({ request, resource: this.accountService.dbName, resourceRef: request.params.id, flag: FLAGS.DELETE })
       const item = await withTransaction(async (session) => {
         const item = await this.accountService.deleteOne({ id: request.params.id }, { session, projection: '-password' })
         if (!item) throw this.accountService.error(404, 'id-not-exist')
