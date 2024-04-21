@@ -5,6 +5,7 @@ export interface Account {
   id: string
   email: string
   password: string
+  role: string
 }
 
 const AccountSchema = new Schema<Account>(
@@ -23,6 +24,11 @@ const AccountSchema = new Schema<Account>(
     password: {
       type: String,
       required: true
+    },
+    role: {
+      type: String,
+      required: true,
+      default: 'user'
     }
   },
   { timestamps: true, collection: databaseNames.account }
