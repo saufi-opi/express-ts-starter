@@ -1,6 +1,7 @@
 import { Request } from 'express'
 import { JWT_SECRET } from '../../config'
 import { JwtPayload, sign, verify } from 'jsonwebtoken'
+import { AccountRole } from '../account/account.model'
 
 interface CreateTokenOption {
   account: string
@@ -28,6 +29,6 @@ export function getAccountIdFromToken(token: string) {
     const account = payload.account
     return account
   } catch (error) {
-    return 'guest'
+    return AccountRole.GUEST
   }
 }

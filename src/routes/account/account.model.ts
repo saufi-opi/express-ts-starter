@@ -1,11 +1,17 @@
 import { Schema, model } from 'mongoose'
 import databaseNames from '../../databases/database.names'
 
+export enum AccountRole {
+  ADMIN = 'admin',
+  USER = 'user',
+  GUEST = 'guest'
+}
+
 export interface Account {
   id: string
   email: string
   password: string
-  role: string
+  role: Exclude<AccountRole, AccountRole.GUEST>
 }
 
 const AccountSchema = new Schema<Account>(
@@ -27,8 +33,9 @@ const AccountSchema = new Schema<Account>(
     },
     role: {
       type: String,
+      enum: [AccountRole.ADMIN, AccountRole.USER],
       required: true,
-      default: 'user'
+      default: AccountRole.USER
     }
   },
   { timestamps: true, collection: databaseNames.account }

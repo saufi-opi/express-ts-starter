@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { MultipleItemResponse, SingleItemResponse } from '../../interfaces/response.interface'
-import { Account } from './account.model'
+import { Account, AccountRole } from './account.model'
 import AccountService from './account.service'
 import { withTransaction } from '../../utils/database'
 import databaseNames from '../../databases/database.names'
@@ -33,8 +33,9 @@ export class AccountController {
         .setResource(databaseNames.account)
         .setResourceRef(item.id)
         .grantAccount(item.id, FLAGS.READ | FLAGS.UPDATE | FLAGS.DELETE)
-        .grantRole('admin', FLAGS.READ | FLAGS.UPDATE | FLAGS.DELETE)
-        .grantRole('user', FLAGS.READ)
+        .grantRole(AccountRole.ADMIN, FLAGS.READ | FLAGS.UPDATE | FLAGS.DELETE)
+        .grantRole(AccountRole.USER, FLAGS.READ)
+        .grantRole(AccountRole.GUEST, FLAGS.READ)
         .execute()
 
       response.status(201).json({ success: true, item })
