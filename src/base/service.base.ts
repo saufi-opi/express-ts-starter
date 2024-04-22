@@ -131,6 +131,7 @@ export class BaseService<T extends { id: string }> {
   }
 
   public async findById(id: string, options?: QueryOptions<T>): Promise<T | null> {
+    options ??= {}
     const filter = { id } as FilterQuery<T>
     const item = await this.model.findOne(filter, options.projection, options)
     return item
