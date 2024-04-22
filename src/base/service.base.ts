@@ -119,7 +119,8 @@ export class BaseService<T extends { id: string }> {
     options.upsert = true
     options.returnDocument = 'after'
     docs = appendDoc(docs)
-    const item = await this.model.findOneAndReplace({ id: docs.id }, docs, options)
+    const filter = { id: docs.id } as FilterQuery<T>
+    const item = await this.model.findOneAndReplace(filter, docs, options)
     return item
   }
 
@@ -130,7 +131,8 @@ export class BaseService<T extends { id: string }> {
   }
 
   public async findById(id: string, options?: QueryOptions<T>): Promise<T | null> {
-    const item = await this.model.findOne({ id }, {}, options)
+    const filter = { id } as FilterQuery<T>
+    const item = await this.model.findOne(filter, {}, options)
     return item
   }
 
