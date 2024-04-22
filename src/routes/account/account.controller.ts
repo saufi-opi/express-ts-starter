@@ -47,6 +47,16 @@ export class AccountController {
     }
   }
 
+  public getAccount = async (request: Request, response: Response<SingleItemResponse<Account>>, next: NextFunction) => {
+    try {
+      await validateAction({ request, resource: this.accountService.dbName, resourceRef: request.params.id, flag: FLAGS.READ })
+      const item = await this.accountService.findById(request.params.id, { projection: '-password' })
+      response.status(200).json({ success: true, item })
+    } catch (error) {
+      next(error)
+    }
+  }
+
   public updateAccount = async (request: Request, response: Response<SingleItemResponse<Account>>, next: NextFunction) => {
     try {
       await validateAction({ request, resource: this.accountService.dbName, resourceRef: request.params.id, flag: FLAGS.UPDATE })
