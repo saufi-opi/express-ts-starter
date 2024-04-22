@@ -1,4 +1,4 @@
-import { AggregateOptions, ClientSession, FilterQuery, Model, PipelineStage, QueryOptions } from 'mongoose'
+import { AggregateOptions, ClientSession, FilterQuery, Model, PipelineStage, QueryOptions, UpdateQuery } from 'mongoose'
 import { createError, createErrorFactory } from '../utils/error'
 import { appendDoc } from '../utils/database'
 import { Resources } from '../interfaces/response.interface'
@@ -136,14 +136,14 @@ export class BaseService<T extends { id: string }> {
     return item
   }
 
-  public async updateOne(filter: FilterQuery<T>, docs: Partial<T>, options?: QueryOptions<T>): Promise<T | null> {
+  public async updateOne(filter: FilterQuery<T>, docs: Partial<T> | UpdateQuery<T>, options?: QueryOptions<T>): Promise<T | null> {
     options ??= {}
     options.returnDocument = 'after'
     const item = await this.model.findOneAndUpdate(filter, docs, options)
     return item
   }
 
-  public async updateMany(filter: FilterQuery<T>, docs: Partial<T>, options?: QueryOptions<T>): Promise<T[]> {
+  public async updateMany(filter: FilterQuery<T>, docs: Partial<T> | UpdateQuery<T>, options?: QueryOptions<T>): Promise<T[]> {
     options ??= {}
     const items = await this.model.find(filter, {}, options)
     await this.model.updateMany(filter, docs, { session: options?.session })
