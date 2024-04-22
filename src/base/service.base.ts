@@ -25,7 +25,7 @@ export interface ExtendedSearchQueryOptions extends SearchQueryOptions {
 }
 
 export class BaseService<T extends { id: string }> {
-  protected model: Model<T>
+  public readonly model: Model<T>
   public error: typeof createError
   public dbName: string
   public primaryKey: string
