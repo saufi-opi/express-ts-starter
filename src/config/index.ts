@@ -11,7 +11,7 @@ const defaults = {
   TOKEN_EXP: '3d'
 }
 let config: typeof defaults = {
-  PORT: +process.env.PORT ?? defaults.PORT,
+  PORT: process.env.PORT ? +process.env.PORT : defaults.PORT,
   MONGODB_URL: process.env.MONGODB_URL ?? defaults.MONGODB_URL,
   MONGODB_DB_NAME: process.env.MONGODB_DB_NAME ?? defaults.MONGODB_DB_NAME,
   SMTP_CONNECTION_STRING: process.env.SMTP_CONNECTION_STRING ?? defaults.SMTP_CONNECTION_STRING,
