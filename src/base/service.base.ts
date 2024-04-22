@@ -126,13 +126,13 @@ export class BaseService<T extends { id: string }> {
 
   public async findOne(filter: FilterQuery<T>, options?: QueryOptions<T>): Promise<T | null> {
     options ??= {}
-    const item = await this.model.findOne(filter, {}, options)
+    const item = await this.model.findOne(filter, options.projection, options)
     return item
   }
 
   public async findById(id: string, options?: QueryOptions<T>): Promise<T | null> {
     const filter = { id } as FilterQuery<T>
-    const item = await this.model.findOne(filter, {}, options)
+    const item = await this.model.findOne(filter, options.projection, options)
     return item
   }
 
@@ -145,7 +145,7 @@ export class BaseService<T extends { id: string }> {
 
   public async updateMany(filter: FilterQuery<T>, docs: Partial<T> | UpdateQuery<T>, options?: QueryOptions<T>): Promise<T[]> {
     options ??= {}
-    const items = await this.model.find(filter, {}, options)
+    const items = await this.model.find(filter, options.projection, options)
     await this.model.updateMany(filter, docs, { session: options?.session })
     const results = await this.model.find({ id: { $in: items.map((o) => o.id) } }, {}, options)
     return results
@@ -160,8 +160,8 @@ export class BaseService<T extends { id: string }> {
 
   public async deleteMany(filter: FilterQuery<T>, options?: QueryOptions<T>): Promise<T[]> {
     options ??= {}
-    const items = await this.model.find(filter, options, options)
-    await this.model.deleteMany(filter, { session: options?.session })
+    const items = await this.model.find(filter, options.projection, options)
+    await this.model.deleteMany(filter, { session: options.session })
     return items
   }
 
