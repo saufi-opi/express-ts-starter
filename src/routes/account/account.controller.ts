@@ -8,9 +8,12 @@ import { AccountModel } from './account.model'
 import { FLAGS } from '../../permissions/permissions.flags'
 import { retrieveQuery } from '../../utils/query'
 import { validateAction } from '../../permissions/permission.helper'
+import { PermissionClaimService } from '../../permissions/permission.service'
+import { PermissionClaimModel, PermissionClaimnOwnerType } from '../../permissions/permission.model'
 
 export class AccountController {
   private accountService = new AccountService(AccountModel, { dbName: databaseNames.account })
+  private permissionClaimService = new PermissionClaimService(PermissionClaimModel, { dbName: databaseNames.system.claim })
 
   public getAccounts = async (request: Request, response: Response<MultipleItemResponse<Account>>, next: NextFunction) => {
     const options = retrieveQuery(request)
@@ -65,6 +68,26 @@ export class AccountController {
       const item = await withTransaction(async (session) => {
         const item = await this.accountService.deleteOne({ id: request.params.id }, { session, projection: '-password' })
         if (!item) throw this.accountService.error(404, 'id-not-exist')
+
+        // remove the claim of this account
+        await this.permissionClaimService.deleteMany({ resource: this.accountService.dbName, resourceRef: request.params.id }, { session })
+        // remove permission for other claims of this account
+        await this.permissionClaimService.updateMany(
+          {
+            'items.ownerType': PermissionClaimnOwnerType.ACCOUNT,
+            'items.ownerRef': request.params.id
+          },
+          {
+            $pull: {
+              items: {
+                ownerType: PermissionClaimnOwnerType.ACCOUNT,
+                ownerRef: request.params.id
+              }
+            }
+          },
+          { session }
+        )
+
         return item
       })
 
