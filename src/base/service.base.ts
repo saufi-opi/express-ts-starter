@@ -39,20 +39,14 @@ export class BaseService<T extends { id: string }> {
     this.primaryKey = options.primaryKey
   }
 
-  public aggregationPipeline(options: ExtendedSearchQueryOptions): PipelineStage[] {
+  public aggregationPipeline(_options: ExtendedSearchQueryOptions): PipelineStage[] {
     const pipeline: PipelineStage[] = []
-    
-    // apply default query pipeline
-    this.applyDefaultPipeline(pipeline, options)
-    // apply permission claim pipeline
-    this.applyPermissionClaimPipeline(pipeline, options)
-
     return pipeline
   }
 
   public async search(query: ExtendedSearchQueryOptions = {}, options?: AggregateOptions): Promise<T[]> {
     options ??= {}
-    const items = await this.model.aggregate(this.aggregationPipeline(query), options)
+    const items = await this.model.aggregate(this.computePipeline(query), options)
     return items
   }
 
@@ -108,14 +102,26 @@ export class BaseService<T extends { id: string }> {
     return items
   }
 
-  public async resources(docs: T, session: ClientSession) {
+  public async resources(_docs: T, _session: ClientSession) {
     const resources: Resources = {}
     return resources
   }
 
-  // TODO: make searching, filtering, pagination, sorting
-  private applyDefaultPipeline(pipeline: PipelineStage[], options: ExtendedSearchQueryOptions): void {
+  // TODO: make searching, filtering, pagination
 
+  private applySortPipeline(pipeline: PipelineStage[], sort: SearchQueryOptions['sort']): void {
+    if (sort) {
+      const stage: PipelineStage.Sort = {
+        $sort: {}
+      }
+      for (const s of sort.split(',')) {
+        const symbol = s.startsWith('-') ? '-' : '+'
+        const field = s.replace(symbol, '').trim()
+        const order = symbol === '-' ? -1 : 1
+        stage.$sort[field] = order
+      }
+      pipeline.push(stage)
+    }
   }
 
   private applyPermissionClaimPipeline(pipeline: PipelineStage[], options: ExtendedSearchQueryOptions): void {
@@ -179,6 +185,20 @@ export class BaseService<T extends { id: string }> {
         $unset: ['resources.claim', 'resources.claimNum']
       })
     }
+  }
+
+  private computePipeline(options: ExtendedSearchQueryOptions): PipelineStage[] {
+    const pipeline: PipelineStage[] = []
+    // 1. compute search and filter
+    // 2. apply permision claim pipeline
+    this.applyPermissionClaimPipeline(pipeline, options)
+    // 3. compute this.aggregationPipeline
+    pipeline.concat(this.aggregationPipeline(options))
+    // 4. compute sort
+    this.applySortPipeline(pipeline, options.sort)
+    // 5. compute page and pageSize
+    
+    return pipeline
   }
 }
 
