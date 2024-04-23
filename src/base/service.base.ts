@@ -41,69 +41,11 @@ export class BaseService<T extends { id: string }> {
 
   public aggregationPipeline(options: ExtendedSearchQueryOptions): PipelineStage[] {
     const pipeline: PipelineStage[] = []
-    // TODO: make filtering, pagination, sort
-
-    // generate permission claim pipeline
-    const $or = []
-    if (options.account) {
-      $or.push({
-        $and: [
-          { 'items.flag': { $bitsAllSet: FLAGS.READ } },
-          { $expr: { $eq: ['$items.ownerType', PermissionClaimnOwnerType.ACCOUNT] } },
-          { $expr: { $eq: ['$items.ownerRef', options.account] } }
-        ]
-      })
-    }
-    if (options.role) {
-      $or.push({
-        $and: [
-          { 'items.flag': { $bitsAllSet: FLAGS.READ } },
-          { $expr: { $eq: ['$items.ownerType', PermissionClaimnOwnerType.ROLE] } },
-          { $expr: { $eq: ['$items.ownerRef', options.role] } }
-        ]
-      })
-    }
-    if ($or.length > 0) {
-      pipeline.push({
-        $lookup: {
-          from: databaseNames.system.claim,
-          let: { [this.primaryKey]: `$${this.primaryKey}` },
-          pipeline: [
-            {
-              $match: {
-                $and: [{ $expr: { $eq: ['$resourceRef', `$$${this.primaryKey}`] } }, { $expr: { $eq: ['$resource', this.dbName] } }]
-              }
-            },
-            {
-              $unwind: {
-                path: '$items'
-              }
-            },
-            {
-              $match: {
-                $or
-              }
-            }
-          ],
-          as: 'resources.claim'
-        }
-      })
-      pipeline.push({
-        $addFields: {
-          'resources.claimNum': {
-            $size: '$resources.claim'
-          }
-        }
-      })
-      pipeline.push({
-        $match: {
-          'resources.claimNum': { $gt: 0 }
-        }
-      })
-      pipeline.push({
-        $unset: ['resources.claim', 'resources.claimNum']
-      })
-    }
+    
+    // apply default query pipeline
+    this.applyDefaultPipeline(pipeline, options)
+    // apply permission claim pipeline
+    this.applyPermissionClaimPipeline(pipeline, options)
 
     return pipeline
   }
@@ -169,6 +111,74 @@ export class BaseService<T extends { id: string }> {
   public async resources(docs: T, session: ClientSession) {
     const resources: Resources = {}
     return resources
+  }
+
+  // TODO: make searching, filtering, pagination, sorting
+  private applyDefaultPipeline(pipeline: PipelineStage[], options: ExtendedSearchQueryOptions): void {
+
+  }
+
+  private applyPermissionClaimPipeline(pipeline: PipelineStage[], options: ExtendedSearchQueryOptions): void {
+    const $or = []
+    if (options.account) {
+      $or.push({
+        $and: [
+          { 'items.flag': { $bitsAllSet: FLAGS.READ } },
+          { $expr: { $eq: ['$items.ownerType', PermissionClaimnOwnerType.ACCOUNT] } },
+          { $expr: { $eq: ['$items.ownerRef', options.account] } }
+        ]
+      })
+    }
+    if (options.role) {
+      $or.push({
+        $and: [
+          { 'items.flag': { $bitsAllSet: FLAGS.READ } },
+          { $expr: { $eq: ['$items.ownerType', PermissionClaimnOwnerType.ROLE] } },
+          { $expr: { $eq: ['$items.ownerRef', options.role] } }
+        ]
+      })
+    }
+    if ($or.length > 0) {
+      pipeline.push({
+        $lookup: {
+          from: databaseNames.system.claim,
+          let: { [this.primaryKey]: `$${this.primaryKey}` },
+          pipeline: [
+            {
+              $match: {
+                $and: [{ $expr: { $eq: ['$resourceRef', `$$${this.primaryKey}`] } }, { $expr: { $eq: ['$resource', this.dbName] } }]
+              }
+            },
+            {
+              $unwind: {
+                path: '$items'
+              }
+            },
+            {
+              $match: {
+                $or
+              }
+            }
+          ],
+          as: 'resources.claim'
+        }
+      })
+      pipeline.push({
+        $addFields: {
+          'resources.claimNum': {
+            $size: '$resources.claim'
+          }
+        }
+      })
+      pipeline.push({
+        $match: {
+          'resources.claimNum': { $gt: 0 }
+        }
+      })
+      pipeline.push({
+        $unset: ['resources.claim', 'resources.claimNum']
+      })
+    }
   }
 }
 
