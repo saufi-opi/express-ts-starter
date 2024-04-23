@@ -1,9 +1,10 @@
 import { FilterQuery, PipelineStage, QueryOptions } from 'mongoose'
-import { Account } from './account.model'
+import { Account, AccountModel } from './account.model'
 import { createHash } from 'crypto'
 import BaseService, { ExtendedSearchQueryOptions } from '../../base/service.base'
+import databaseNames from '../../databases/database.names'
 
-export class AccountService extends BaseService<Account> {
+class AccountService extends BaseService<Account> {
   public aggregationPipeline(options: ExtendedSearchQueryOptions): PipelineStage[] {
     const pipeline = super.aggregationPipeline(options)
     pipeline.push({
@@ -71,4 +72,4 @@ export class AccountService extends BaseService<Account> {
   }
 }
 
-export default AccountService
+export default new AccountService(AccountModel, { dbName: databaseNames.account })

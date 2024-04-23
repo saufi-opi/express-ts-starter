@@ -1,7 +1,8 @@
 import { AnyBulkWriteOperation, Model, MongooseBulkWriteOptions } from 'mongoose'
 import { createError } from '../utils/error'
 import { randomUUID } from 'crypto'
-import { PermissionClaim, PermissionClaimModel, PermissionClaimnOwnerType } from './permission.model'
+import { PermissionClaim, PermissionClaimnOwnerType } from './permission.model'
+import PermissionClaimService from './permission.service'
 
 class PermissionClaimBuilder {
   operations: Array<AnyBulkWriteOperation<PermissionClaim>>
@@ -11,7 +12,7 @@ class PermissionClaimBuilder {
 
   constructor() {
     this.operations = []
-    this.model = PermissionClaimModel
+    this.model = PermissionClaimService.model
   }
 
   setResource(resource: string): this {

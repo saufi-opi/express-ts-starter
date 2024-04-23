@@ -1,8 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import { AuthenticateService } from './authenticate.service'
-import { AuthenticateModel } from './authenticate.model'
-import databaseNames from '../../databases/database.names'
-import { AccountModel } from '../account/account.model'
+import AuthenticateService from './authenticate.service'
 import AccountService from '../account/account.service'
 import { JwtPayload, verify } from 'jsonwebtoken'
 import { JWT_SECRET, TOKEN_EXP } from '../../config'
@@ -10,8 +7,8 @@ import { createToken, findTokenFromHeader } from './authenticate.helper'
 
 export class AuthenticateController {
   private service = {
-    auth: new AuthenticateService(AuthenticateModel, { dbName: databaseNames.authenticate }),
-    account: new AccountService(AccountModel, { dbName: databaseNames.account })
+    auth: AuthenticateService,
+    account: AccountService
   }
 
   public login = async (request: Request, response: Response, next: NextFunction) => {

@@ -4,16 +4,15 @@ import { Account, AccountRole } from './account.model'
 import AccountService from './account.service'
 import { withTransaction } from '../../utils/database'
 import databaseNames from '../../databases/database.names'
-import { AccountModel } from './account.model'
 import { FLAGS } from '../../permissions/permissions.flags'
 import { retrieveQuery } from '../../utils/query'
 import { validateAction } from '../../permissions/permission.helper'
-import { PermissionClaimService } from '../../permissions/permission.service'
-import { PermissionClaimModel, PermissionClaimnOwnerType } from '../../permissions/permission.model'
+import PermissionClaimService from '../../permissions/permission.service'
+import { PermissionClaimnOwnerType } from '../../permissions/permission.model'
 
 export class AccountController {
-  private accountService = new AccountService(AccountModel, { dbName: databaseNames.account })
-  private permissionClaimService = new PermissionClaimService(PermissionClaimModel, { dbName: databaseNames.system.claim })
+  private accountService = AccountService
+  private permissionClaimService = PermissionClaimService
 
   public getAccounts = async (request: Request, response: Response<MultipleItemResponse<Account>>, next: NextFunction) => {
     const options = retrieveQuery(request)

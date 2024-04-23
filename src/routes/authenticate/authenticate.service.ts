@@ -1,4 +1,7 @@
 import BaseService from '../../base/service.base'
-import { Authenticate } from './authenticate.model'
+import databaseNames from '../../databases/database.names'
+import { Authenticate, AuthenticateModel } from './authenticate.model'
 
-export class AuthenticateService extends BaseService<Authenticate> {}
+class AuthenticateService extends BaseService<Authenticate> {}
+
+export default new AuthenticateService(AuthenticateModel, { dbName: databaseNames.authenticate })

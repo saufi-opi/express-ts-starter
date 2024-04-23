@@ -1,4 +1,7 @@
 import BaseService from '../base/service.base'
-import { PermissionClaim } from './permission.model'
+import databaseNames from '../databases/database.names'
+import { PermissionClaim, PermissionClaimModel } from './permission.model'
 
-export class PermissionClaimService extends BaseService<PermissionClaim> {}
+class PermissionClaimService extends BaseService<PermissionClaim> {}
+
+export default new PermissionClaimService(PermissionClaimModel, { dbName: databaseNames.system.claim })
