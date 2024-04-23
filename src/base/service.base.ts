@@ -50,6 +50,9 @@ export class BaseService<T extends { id: string }> {
     return items
   }
 
+  // TODO: get total counts based on filter and search
+  public async count() {}
+
   public async insertOne(docs: Partial<T>, options?: QueryOptions<T>): Promise<T | null> {
     options ??= {}
     options.upsert = true
@@ -107,7 +110,7 @@ export class BaseService<T extends { id: string }> {
     return resources
   }
 
-  // TODO: make searching, filtering, pagination
+  // TODO: make searching, filtering
 
   private applySortPipeline(pipeline: PipelineStage[], sort: SearchQueryOptions['sort']): void {
     if (sort) {
@@ -121,6 +124,23 @@ export class BaseService<T extends { id: string }> {
         stage.$sort[field] = order
       }
       pipeline.push(stage)
+    }
+  }
+
+  private applyPaginationPipeline(pipeline: PipelineStage[], options: Pick<SearchQueryOptions, 'page' | 'pageSize'>) {
+    options ??= {}
+    let { page, pageSize } = options
+
+    if (typeof page !== 'undefined' && typeof pageSize !== 'undefined') {
+      page = Number(page)
+      pageSize = Number(pageSize)
+
+      let skipPipeline: PipelineStage.Skip, limitPipeline: PipelineStage.Limit
+      const skip = page > 0 ? (page - 1) * pageSize : 0
+      limitPipeline = { $limit: pageSize + skip }
+      skipPipeline = { $skip: skip }
+
+      pipeline.push(limitPipeline, skipPipeline)
     }
   }
 
@@ -189,15 +209,16 @@ export class BaseService<T extends { id: string }> {
 
   private computePipeline(options: ExtendedSearchQueryOptions): PipelineStage[] {
     const pipeline: PipelineStage[] = []
-    // 1. compute search and filter
+    // 1. apply search and filter
     // 2. apply permision claim pipeline
     this.applyPermissionClaimPipeline(pipeline, options)
-    // 3. compute this.aggregationPipeline
-    pipeline.concat(this.aggregationPipeline(options))
-    // 4. compute sort
+    // 3. apply this.aggregationPipeline
+    pipeline.push(...this.aggregationPipeline(options))
+    // 4. apply sort
     this.applySortPipeline(pipeline, options.sort)
-    // 5. compute page and pageSize
-    
+    // 5. apply page and pageSize
+    this.applyPaginationPipeline(pipeline, options)
+
     return pipeline
   }
 }
