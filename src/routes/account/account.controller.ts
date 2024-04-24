@@ -18,7 +18,9 @@ export class AccountController {
     const options = retrieveQuery(request)
     try {
       const items = await this.accountService.search(options)
-      response.status(200).json({ success: true, counts: items.length, items })
+      const counts = await this.accountService.count(options)
+
+      response.status(200).json({ success: true, counts, items })
     } catch (error) {
       next(error)
     }
