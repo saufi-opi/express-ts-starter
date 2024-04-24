@@ -165,45 +165,51 @@ export class BaseService<T extends { id: string }> {
       })
     }
     if ($or.length > 0) {
-      pipeline.push({
-        $lookup: {
-          from: databaseNames.system.claim,
-          let: { [this.primaryKey]: `$${this.primaryKey}` },
-          pipeline: [
-            {
-              $match: {
-                $and: [{ $expr: { $eq: ['$resourceRef', `$$${this.primaryKey}`] } }, { $expr: { $eq: ['$resource', this.dbName] } }]
+      pipeline.push(
+        // 1. lookup from permission claim collection
+        {
+          $lookup: {
+            from: databaseNames.system.claim,
+            let: { [this.primaryKey]: `$${this.primaryKey}` },
+            pipeline: [
+              {
+                $match: {
+                  $and: [{ $expr: { $eq: ['$resourceRef', `$$${this.primaryKey}`] } }, { $expr: { $eq: ['$resource', this.dbName] } }]
+                }
+              },
+              {
+                $unwind: {
+                  path: '$items'
+                }
+              },
+              {
+                $match: {
+                  $or
+                }
               }
-            },
-            {
-              $unwind: {
-                path: '$items'
-              }
-            },
-            {
-              $match: {
-                $or
-              }
-            }
-          ],
-          as: 'resources.claim'
-        }
-      })
-      pipeline.push({
-        $addFields: {
-          'resources.claimNum': {
-            $size: '$resources.claim'
+            ],
+            as: 'resources.claim'
           }
+        },
+        // 2. add resources.claimNum field
+        {
+          $addFields: {
+            'resources.claimNum': {
+              $size: '$resources.claim'
+            }
+          }
+        },
+        // 3. filter out item without read permission
+        {
+          $match: {
+            'resources.claimNum': { $gt: 0 }
+          }
+        },
+        // 4. cleanup
+        {
+          $unset: ['resources.claim', 'resources.claimNum']
         }
-      })
-      pipeline.push({
-        $match: {
-          'resources.claimNum': { $gt: 0 }
-        }
-      })
-      pipeline.push({
-        $unset: ['resources.claim', 'resources.claimNum']
-      })
+      )
     }
   }
 
