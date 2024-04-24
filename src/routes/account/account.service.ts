@@ -72,4 +72,4 @@ class AccountService extends BaseService<Account> {
   }
 }
 
-export default new AccountService(AccountModel, { dbName: databaseNames.account })
+export default new AccountService(AccountModel, { dbName: databaseNames.account, searchFields: ['email'] })
