@@ -60,8 +60,12 @@ export class BaseService<T extends { id: string }> {
     this.applySearchFilterPipeline(pipeline, query)
     this.applyPermissionClaimPipeline(pipeline, query)
     pipeline.push(...this.aggregationPipeline(query))
-    const items = await this.model.aggregate(pipeline, options)
-    return items.length
+    // Add $count stage to the pipeline
+    pipeline.push({ $count: 'count' })
+
+    const result = await this.model.aggregate(pipeline, options)
+    const count = result.length > 0 ? result[0].count : 0
+    return count
   }
 
   public async insertOne(docs: Partial<T>, options?: QueryOptions<T>): Promise<T | null> {
