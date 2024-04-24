@@ -6,14 +6,15 @@ import { FLAGS } from '../permissions/permissions.flags'
 import { PermissionClaimnOwnerType } from '../permissions/permission.model'
 import databaseNames from '../databases/database.names'
 
-export interface ServiceOptions {
+export interface ServiceOptions<T> {
   dbName: string
   primaryKey?: string
+  searchFields?: (keyof T)[]
 }
 
 export interface SearchQueryOptions {
-  search?: string | Record<string, unknown>
-  filter?: string | Record<string, unknown>
+  search?: string
+  filter?: string
   sort?: string
   page?: number
   pageSize?: number
@@ -29,14 +30,17 @@ export class BaseService<T extends { id: string }> {
   public error: typeof createError
   public dbName: string
   public primaryKey: string
+  private searchFields: (keyof T)[]
 
-  constructor(model: Model<T>, options: ServiceOptions) {
+  constructor(model: Model<T>, options: ServiceOptions<T>) {
     options.primaryKey ??= 'id'
+    options.searchFields ??= []
 
     this.model = model
     this.error = createErrorFactory(options.dbName)
     this.dbName = options.dbName
     this.primaryKey = options.primaryKey
+    this.searchFields = options.searchFields
   }
 
   public aggregationPipeline(_options: ExtendedSearchQueryOptions): PipelineStage[] {
@@ -110,7 +114,40 @@ export class BaseService<T extends { id: string }> {
     return resources
   }
 
-  // TODO: make searching, filtering
+  private applySearchFilterPipeline(pipeline: PipelineStage[], options: Pick<SearchQueryOptions, 'search' | 'filter'>): void {
+    const { search, filter } = options
+    const match: PipelineStage.Match = { $match: {} }
+
+    // 1. search query
+    if (typeof search === 'string' && this.searchFields.length > 0) {
+      const $or: FilterQuery<any>[] = []
+      for (const field of this.searchFields) {
+        $or.push({
+          [field]: { $regex: search, $options: 'i' }
+        })
+      }
+      match.$match.$or = $or
+    }
+
+    // 2. filter query
+    if (typeof filter === 'string') {
+      const $and: FilterQuery<any>[] = []
+      for (let f of filter.trim().split(',')) {
+        const a = f.split(':')
+        const field = a[0]
+        const value = a[1]
+        if (field && value) {
+          $and.push({ [field]: value })
+        }
+      }
+      if ($and.length > 0) match.$match.$and = $and
+    }
+
+    // 3. apply pipeline
+    if (match.$match.$and || match.$match.$or) {
+      pipeline.push(match)
+    }
+  }
 
   private applySortPipeline(pipeline: PipelineStage[], sort: SearchQueryOptions['sort']): void {
     if (sort) {
@@ -216,6 +253,7 @@ export class BaseService<T extends { id: string }> {
   private computePipeline(options: ExtendedSearchQueryOptions): PipelineStage[] {
     const pipeline: PipelineStage[] = []
     // 1. apply search and filter
+    this.applySearchFilterPipeline(pipeline, options)
     // 2. apply permision claim pipeline
     this.applyPermissionClaimPipeline(pipeline, options)
     // 3. apply this.aggregationPipeline
