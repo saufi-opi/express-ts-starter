@@ -54,8 +54,15 @@ export class BaseService<T extends { id: string }> {
     return items
   }
 
-  // TODO: get total counts based on filter and search
-  public async count() {}
+  public async count(query: ExtendedSearchQueryOptions = {}, options?: AggregateOptions): Promise<number> {
+    options ??= {}
+    const pipeline: PipelineStage[] = []
+    this.applySearchFilterPipeline(pipeline, query)
+    this.applyPermissionClaimPipeline(pipeline, query)
+    pipeline.push(...this.aggregationPipeline(query))
+    const items = await this.model.aggregate(pipeline, options)
+    return items.length
+  }
 
   public async insertOne(docs: Partial<T>, options?: QueryOptions<T>): Promise<T | null> {
     options ??= {}
