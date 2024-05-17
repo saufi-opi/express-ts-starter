@@ -30,17 +30,18 @@ export class AccountController {
     try {
       const item = await withTransaction(async (session) => {
         const item = await this.accountService.insertOne(request.body, { session, projection: '-password' })
+
+        await request.permissionClaimBuilder
+          .setResource(databaseNames.account)
+          .setResourceRef(item.id)
+          .grantAccount(item.id, FLAGS.READ | FLAGS.UPDATE | FLAGS.DELETE)
+          .grantRole(AccountRole.ADMIN, FLAGS.READ | FLAGS.UPDATE | FLAGS.DELETE)
+          .grantRole(AccountRole.USER, FLAGS.READ)
+          .grantRole(AccountRole.GUEST, FLAGS.READ)
+          .execute({ session })
+
         return item
       })
-
-      await request.permissionClaimBuilder
-        .setResource(databaseNames.account)
-        .setResourceRef(item.id)
-        .grantAccount(item.id, FLAGS.READ | FLAGS.UPDATE | FLAGS.DELETE)
-        .grantRole(AccountRole.ADMIN, FLAGS.READ | FLAGS.UPDATE | FLAGS.DELETE)
-        .grantRole(AccountRole.USER, FLAGS.READ)
-        .grantRole(AccountRole.GUEST, FLAGS.READ)
-        .execute()
 
       response.status(201).json({ success: true, item })
     } catch (error) {

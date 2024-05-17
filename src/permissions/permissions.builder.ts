@@ -1,4 +1,4 @@
-import { AnyBulkWriteOperation, Model, MongooseBulkWriteOptions } from 'mongoose'
+import { AnyBulkWriteOperation, ClientSession, Model, MongooseBulkWriteOptions } from 'mongoose'
 import { createError } from '../utils/error'
 import { randomUUID } from 'crypto'
 import { PermissionClaim, PermissionClaimnOwnerType } from './permission.model'
@@ -88,7 +88,7 @@ class PermissionClaimBuilder {
     return this
   }
 
-  async execute(options?: MongooseBulkWriteOptions): Promise<void> {
+  async execute(options?: MongooseBulkWriteOptions & { session: ClientSession }): Promise<void> {
     // skip when no operation
     if (this.operations.length === 0) return
     await this.model.bulkWrite(this.operations, options)
